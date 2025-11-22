@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>TinyLink Dashboard</title>
+  <script defer src="dashboard.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-50 min-h-screen p-6">
+  <div class="max-w-5xl mx-auto">
+    <h1 class="text-3xl font-bold mb-6 text-center">TinyLink Dashboard</h1>
+
+    <!-- Add new link -->
+    <div class="flex gap-2 mb-4">
+      <input id="urlInput" type="text" placeholder="Enter URL" 
+             class="flex-1 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400" />
+      <button id="addLinkBtn" 
+        class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 disabled:opacity-50"
+>
+  Add Link
+</button>
+
+    </div>
+    <!-- open public/index.html and find the URL input form -->
+<form id="shortenForm">
+  <input id="urlInput" type="text" placeholder="Paste your URL here" />
+  <label style="display:block; margin-top:6px;">
+    <input id="useKeywordToggle" type="checkbox" />
+    Add meaningful keyword to short link (optional)
+  </label>
+  <button id="shortenBtn" type="submit">Shorten</button>
+</form>
+
+<!-- place to show result -->
+<div id="result"></div>
+
+
+    <!-- Search -->
+    <div class="mb-4">
+      <input id="searchInput" type="text" placeholder="Search by code or URL"
+             class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400" />
+    </div>
+
+    <!-- Links table -->
+    <div class="overflow-x-auto bg-white shadow rounded">
+      <table class="min-w-full table-auto">
+        <thead class="bg-gray-100 text-left">
+          <tr>
+            <th class="px-4 py-2">Short Code</th>
+            <th class="px-4 py-2">Original URL</th>
+            <th class="px-4 py-2">Clicks</th>
+            <th class="px-4 py-2">Last Clicked</th>
+            <th class="px-4 py-2">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="linksTableBody" class="divide-y divide-gray-200">
+          <!-- Links will be populated here -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+</body>
+
+</html>
