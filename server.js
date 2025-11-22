@@ -28,17 +28,31 @@ const pool = require("./src/db");
 const linkRoutes = require("./src/routes/links");
 const { getLink } = require("./src/controllers/linksController");
 
+
+
+
+// Health check
+app.get("/healthz", (req, res) => {
+  res.status(200).json({
+    ok: true,
+    version: "1.0",
+    uptime: process.uptime()
+  });
+});
+
+
 app.use("/api/links", linkRoutes);
+
+app.get("/", (req, res) => {
+  res.send("URL Shortener Backend Running ✔️");
+});
+
 // Redirect short code at root
 app.get("/:code", getLink);
 
 
 
 
-// Health check
-app.get("/healthz", (req, res) => {
-    res.status(200).json({ ok: true, version: "1.0" });
-});
 
 // Verify DB connection
 pool.query("SELECT NOW()", (err, result) => {

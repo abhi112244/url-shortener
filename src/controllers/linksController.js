@@ -7,10 +7,42 @@ const nanoid = customAlphabet("abcdefghijklmnopqrstuvwxyz1234567890", 6);
 // Create short URL
 exports.createLink = async (req, res) => {
   try {
-    const { url } = req.body;
-    if (!url) return res.status(400).json({ error: "URL is required" });
+    const { url, customCode } = req.body;
 
-    const code = nanoid();
+    if (!url) {
+      return res.status(400).json({ error: "URL is required" });
+    }
+
+    let code;
+
+    // If custom code is provided
+    if (customCode) {
+      const regex = /^[A-Za-z0-9]{6,8}$/;
+
+      // 1. Validate code
+      if (!regex.test(customCode)) {
+        return res.status(400).json({ error: "Custom code must be 6-8 alphanumeric characters" });
+      }
+
+      // 2. Check if exists
+      const existing = await pool.query(
+        "SELECT * FROM links WHERE code = $1",
+        [customCode]
+      );
+
+      if (existing.rowCount > 0) {
+        return res.status(409).json({ error: "Custom code already exists" });
+      }
+
+      // 3. Use custom code
+      code = customCode;
+
+    } else {
+      // Generate random code
+      code = nanoid();
+    }
+
+    // Save link
     const result = await pool.query(
       "INSERT INTO links (code, original_url) VALUES ($1, $2) RETURNING *",
       [code, url]
@@ -26,6 +58,7 @@ exports.createLink = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
 
 // Redirect using short code with click tracking
 exports.getLink = async (req, res) => {
