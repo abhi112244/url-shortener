@@ -1,75 +1,103 @@
+const API_BASE = "https://tiny-link-backend-lmr4.onrender.com";
+
 const tableBody = document.getElementById("linksTableBody");
 const urlInput = document.getElementById("urlInput");
 const addLinkBtn = document.getElementById("addLinkBtn");
 const searchInput = document.getElementById("searchInput");
-const refreshBtn = document.getElementById("refreshBtn");
-refreshBtn.addEventListener("click", fetchLinks);
 
+// Fetch and render all links
 async function fetchLinks() {
-  const res = await fetch("/api/links");
-  const links = await res.json();
-  renderLinks(links);
+  try {
+    const res = await fetch(`${API_BASE}/api/links`);
+    if (!res.ok) throw new Error("Failed to fetch links");
+    const links = await res.json();
+    renderLinks(links);
+  } catch (err) {
+    console.error(err);
+    alert("Error fetching links. Check backend or CORS settings.");
+  }
 }
 
+// Render links in table
 function renderLinks(links) {
   const searchTerm = searchInput.value.toLowerCase();
   tableBody.innerHTML = "";
 
   links
-    .filter(link => 
+    .filter(link =>
       link.code.toLowerCase().includes(searchTerm) ||
       link.original_url.toLowerCase().includes(searchTerm)
     )
     .forEach(link => {
       const tr = document.createElement("tr");
       tr.innerHTML = `
-  <td class="px-4 py-2">${link.code}</td>
-  <td class="px-4 py-2 truncate max-w-xs">${link.original_url}</td>
-  <td class="px-4 py-2">${link.clicks}</td>
-  <td class="px-4 py-2">${link.last_clicked ?? "-"}</td>
-  <td class="px-4 py-2 flex gap-2">
-    <button class="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600" onclick="deleteLink('${link.code}')">Delete</button>
-    <button class="bg-green-500 text-white px-2 py-1 rounded hover:bg-green-600" onclick="copyLink('${link.code}')">Copy</button>
-      <button onclick="window.location.href='/code/${link.code}'">View Stats</button>
-
-  </td>
-`;
-
-      
+        <td class="px-4 py-2">${link.code}</td>
+        <td class="px-4 py-2 truncate max-w-xs">${link.original_url}</td>
+        <td class="px-4 py-2">${link.clicks}</td>
+        <td class="px-4 py-2">${link.last_clicked ?? "-"}</td>
+        <td class="px-4 py-2 flex gap-2">
+          <button class="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600" onclick="deleteLink('${link.code}')">Delete</button>
+          <button class="bg-green-500 text-white px-2 py-1 rounded hover:bg-green-600" onclick="copyLink('${link.code}')">Copy</button>
+          <button onclick="window.open('${API_BASE}/code/${link.code}', '_blank')">View Stats</button>
+        </td>
+      `;
       tableBody.appendChild(tr);
     });
 }
 
+// Add new link
 async function addLink() {
-  const url = urlInput.value;
+  let url = urlInput.value.trim();
   if (!url) return alert("Enter a URL");
 
-  const res = await fetch("/api/links", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ url })
-  });
+  if (!url.startsWith("http://") && !url.startsWith("https://")) {
+    url = "https://" + url;
+  }
 
-  const data = await res.json();
-  if (res.ok) {
+  try {
+    const res = await fetch(`${API_BASE}/api/links`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url })
+    });
+
+    let data = {};
+    try {
+      data = await res.json(); // Try parsing JSON
+    } catch {
+      // Ignore parse errors (backend might return empty body)
+    }
+
+    if (!res.ok) {
+      return alert(`Error: ${data.error || "Failed to create link"}`);
+    }
+
     urlInput.value = "";
     fetchLinks();
-    alert(`Short URL created: ${data.shortUrl}`);
-  } else {
-    alert(`Error: ${data.error}`);
+    alert(`Short URL created: ${data.shortUrl || data.code || "Link created"}`);
+  } catch (err) {
+    console.error(err);
+    alert("Error adding link. Check backend or network.");
   }
 }
 
+// Delete link
 async function deleteLink(code) {
   if (!confirm("Delete this link?")) return;
 
-  const res = await fetch(`/api/links/${code}`, { method: "DELETE" });
-  if (res.ok) fetchLinks();
-  else alert("Failed to delete link");
+  try {
+    const res = await fetch(`${API_BASE}/api/links/${code}`, { method: "DELETE" });
+    if (res.ok) fetchLinks();
+    else alert("Failed to delete link");
+  } catch (err) {
+    console.error(err);
+    alert("Error deleting link.");
+  }
 }
 
+// Copy link to clipboard
 function copyLink(code) {
-  const shortUrl = `${window.location.origin}/${code}`;
+  const shortUrl = `${API_BASE}/${code}`;
   navigator.clipboard.writeText(shortUrl);
   alert(`Copied: ${shortUrl}`);
 }
@@ -80,34 +108,3 @@ searchInput.addEventListener("input", fetchLinks);
 
 // Initial load
 fetchLinks();
-
-// open public/js/app.js (or wherever you handle form submit)
-document.getElementById('shortenForm').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const url = document.getElementById('urlInput').value.trim();
-  const useKeyword = document.getElementById('useKeywordToggle').checked;
-
-  if (!url) {
-    alert('Please paste a URL');
-    return;
-  }
-
-  try {
-    const res = await fetch('/links', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ url, useKeyword })
-    });
-
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Server error');
-
-    // show short URL
-    const resultDiv = document.getElementById('result');
-    resultDiv.innerHTML = `<a href="${data.shortUrl}" target="_blank">${data.shortUrl}</a>`;
-  } catch (err) {
-    console.error(err);
-    alert('Error: ' + err.message);
-  }
-});
-
