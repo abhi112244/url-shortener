@@ -1,10 +1,14 @@
 pipeline {
     agent any
 
+    tools {
+        nodejs 'Node18'  // Name you gave in Global Tool Config
+    }
+
     stages {
         stage('Checkout') {
             steps {
-                git branch: 'main', url: 'https://github.com/abhi112244/url-shortener'
+                git 'https://github.com/abhi112244/url-shortener'
             }
         }
 
@@ -28,7 +32,7 @@ pipeline {
 
         stage('Run App') {
             steps {
-                sh 'nohup node server.js > output.log 2>&1 &'
+                sh 'node server.js &'
             }
         }
     }
