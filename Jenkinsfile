@@ -4,7 +4,7 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                git 'https://github.com/abhi112244/url-shortener'
+                git branch: 'main', url: 'https://github.com/abhi112244/url-shortener'
             }
         }
 
@@ -28,7 +28,7 @@ pipeline {
 
         stage('Run App') {
             steps {
-                sh 'node server.js &'
+                sh 'nohup node server.js > output.log 2>&1 &'
             }
         }
     }
