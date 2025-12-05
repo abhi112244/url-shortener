@@ -5,10 +5,10 @@ pipeline {
         nodejs 'node18'  // Name you gave in Global Tool Config
     }
 
-    stages {
+    stages {  // <-- All stages must be inside this block
         stage('Checkout') {
             steps {
-                git 'https://github.com/abhi112244/url-shortener'
+                git branch: 'main', url: 'https://github.com/abhi112244/url-shortener'
             }
         }
 
